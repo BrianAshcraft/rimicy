@@ -59,18 +59,24 @@ export class OverworldScene extends Scene {
     else if (keys["ArrowRight"]) dx = 1;
 
     if (dx !== 0 || dy !== 0) {
-      const targetX = player.x + dx;
-      const targetY = player.y + dy;
+  const targetX = player.x + dx;
+  const targetY = player.y + dy;
 
-      // Optional collision check would go here
+  // Check if target tile is within bounds
+  if (
+    targetY >= 0 && targetY < map.length &&
+    targetX >= 0 && targetX < map[0].length &&
+    map[targetY][targetX] !== 0 // 0 is a wall
+  ) {
+    player.targetX = targetX;
+    player.targetY = targetY;
+    player.moving = true;
+    player.moveProgress = 0;
+    player.dx = dx;
+    player.dy = dy;
+  }
+}
 
-      player.targetX = targetX;
-      player.targetY = targetY;
-      player.moving = true;
-      player.moveProgress = 0;
-      player.dx = dx;
-      player.dy = dy;
-    }
   }
 
   // Animate movement
