@@ -5,3 +5,10 @@ body {
   text-align: center;
   padding-top: 50px;
 }
+
+/* 
+    canvas {
+      image-rendering: pixelated;
+      width: 960px;   /* 4x upscale of 240px */
+      height: 640px;  /* 4x upscale of 160px */
+    } */
