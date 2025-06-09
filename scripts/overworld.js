@@ -5,7 +5,7 @@ export class OverworldScene extends Scene {
   super();
 
   this.tileTypes = {
-    0: { name: "wall", color: "#222", passable: false },
+    0: { name: "wall", color: "red", passable: false },
     1: { name: "floor", color: "#444", passable: true },
     2: { name: "grass", color: "green", passable: true },
     3: { name: "water", color: "blue", passable: false }
