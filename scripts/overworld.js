@@ -19,16 +19,19 @@ export class OverworldScene extends Scene {
 
   this.canvas = null;
   this.ctx = null;
-  this.player = {
-    x: 1,
-    y: 1,
-    size: 24,
-    speed: 4,
-    moving: false,
-    moveProgress: 0,
-    dx: 0,
-    dy: 0
-  };
+  this.tileSize = 16;
+
+this.player = {
+  x: 1,
+  y: 1,
+  size: 14,       // ✅ fits inside a 16x16 tile
+  speed: 4,
+  moving: false,
+  moveProgress: 0,
+  dx: 0,
+  dy: 0
+};
+
 
   this.keys = {};
 }
