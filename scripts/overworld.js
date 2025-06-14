@@ -19,11 +19,11 @@ export class OverworldScene extends Scene {
 
   this.canvas = null;
   this.ctx = null;
-  this.tileSize = 16;
+
 
 this.player = {
-  x: 4,
-  y: 4,
+  x: 10,
+  y: 10,
   size: 14,       // ✅ fits inside a 16x16 tile
   speed: 4,
   moving: false,
@@ -34,6 +34,8 @@ this.player = {
 
 
   this.keys = {};
+  this.inBattle = false;
+
 }
 
 
@@ -44,10 +46,13 @@ async start() {
 
   // Set up canvas
 // Set up canvas with new tileSize
+this.canvas = document.createElement("canvas"); // ← missing line
 this.canvas.width = this.screenWidth * this.tileSize;
 this.canvas.height = this.screenHeight * this.tileSize;
 
-document.body.innerHTML = '';
+
+const existingCanvas = document.querySelector('canvas');
+if (existingCanvas) existingCanvas.remove();
 document.body.appendChild(this.canvas);
 this.ctx = this.canvas.getContext("2d");
 
@@ -118,10 +123,18 @@ this.playerImage.onerror = () => console.error("❌ Failed to load player sprite
     const moveDone = player.moveProgress >= tileSize;
 
     if (moveDone) {
-      player.x = player.targetX;
-      player.y = player.targetY;
-      player.moving = false;
-    }
+  player.x = player.targetX;
+  player.y = player.targetY;
+  player.moving = false;
+
+  const tile = map[player.y][player.x];
+  if (tile === 2) {
+    console.log("🌿 Wild battle triggered!");
+    this.inBattle = true;
+    // Here’s where you’d eventually swap scenes or show a battle menu
+  }
+}
+
   }
 
   // Drawing
