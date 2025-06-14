@@ -5,13 +5,13 @@ export class OverworldScene extends Scene {
   super();
 
   this.tileTypes = {
-    0: { name: "wall", color: "red", passable: false },
-    1: { name: "floor", color: "#444", passable: true },
-    2: { name: "grass", color: "green", passable: true },
+    0: { name: "wall", color: "red", passable: false, image: "wall.png"},
+    1: { name: "floor", color: "#444", passable: true, image: "safegrass.png" },
+    2: { name: "grass", color: "green", passable: true, image: "grass.png" },
     3: { name: "water", color: "blue", passable: false }
   };
 
-  this.tileSize = 16;
+  this.tileSize = 32;
   this.screenWidth = 15;
   this.screenHeight = 10;
 
@@ -22,8 +22,8 @@ export class OverworldScene extends Scene {
   this.tileSize = 16;
 
 this.player = {
-  x: 1,
-  y: 1,
+  x: 4,
+  y: 4,
   size: 14,       // ✅ fits inside a 16x16 tile
   speed: 4,
   moving: false,
@@ -37,29 +37,44 @@ this.player = {
 }
 
 
-  async start() {
-  console.log("Overworld started");
-
-  // Load the map
+async start() {
   const res = await fetch("data/start-town.json");
   const data = await res.json();
   this.map = data.tiles;
 
-console.log("Map loaded:", this.map); // Add this line
-
   // Set up canvas
-  this.canvas = document.createElement("canvas");
-  this.canvas.width = this.screenWidth * this.tileSize;
-  this.canvas.height = this.screenHeight * this.tileSize;
+// Set up canvas with new tileSize
+this.canvas.width = this.screenWidth * this.tileSize;
+this.canvas.height = this.screenHeight * this.tileSize;
 
-  document.body.innerHTML = '';
-  document.body.appendChild(this.canvas);
-  this.ctx = this.canvas.getContext("2d");
+document.body.innerHTML = '';
+document.body.appendChild(this.canvas);
+this.ctx = this.canvas.getContext("2d");
 
-  // Handle keyboard input
+// Scale up visually without smoothing
+this.ctx.imageSmoothingEnabled = false;
+this.canvas.style.width = this.canvas.width * 2 + "px";
+this.canvas.style.height = this.canvas.height * 2 + "px";
+
+
+this.tileImages = {};
+for (const [id, tile] of Object.entries(this.tileTypes)) {
+  const img = new Image();
+  img.src = `assets/${tile.image}`;
+  this.tileImages[id] = img;
+}
+
+// 🔁 NEW: Load player sprite
+this.playerImage = new Image();
+this.playerImage.src = "assets/trainer.png";
+this.playerImage.onload = () => console.log("✅ Player sprite loaded.");
+this.playerImage.onerror = () => console.error("❌ Failed to load player sprite.");
+
+
   window.addEventListener("keydown", e => this.keys[e.key] = true);
   window.addEventListener("keyup", e => this.keys[e.key] = false);
 }
+
 
 
   update() {
@@ -126,35 +141,55 @@ for (let row = 0; row < this.screenHeight; row++) {
     const mapX = camX + col;
     const mapY = camY + row;
 
-    const tile = (map[mapY] && map[mapY][mapX]) ?? 1; // default to floor if out of bounds
+    const tile = (map[mapY] && map[mapY][mapX]) ?? 1;
     const tileType = this.tileTypes[tile] || this.tileTypes[1];
 
-    this.ctx.fillStyle = tileType.color;
-    this.ctx.fillRect(
-      col * tileSize,
-      row * tileSize,
-      tileSize,
-      tileSize
-    );
+    const img = this.tileImages[tile];
+
+    if (img?.complete && img.naturalWidth > 0) {
+      this.ctx.drawImage(
+        img,
+        col * tileSize,
+        row * tileSize,
+        tileSize,
+        tileSize
+      );
+    } else {
+      this.ctx.fillStyle = tileType.color;
+      this.ctx.fillRect(
+        col * tileSize,
+        row * tileSize,
+        tileSize,
+        tileSize
+      );
+    }
   }
 }
 
-  // Draw player
+// ✅ Draw the player after all tiles are drawn
   const offsetX = player.moving ? -player.dx * (tileSize - player.moveProgress) : 0;
-const offsetY = player.moving ? -player.dy * (tileSize - player.moveProgress) : 0;
+  const offsetY = player.moving ? -player.dy * (tileSize - player.moveProgress) : 0;
 
-const screenX = (Math.floor(this.screenWidth / 2) * tileSize) + offsetX + 4;
-const screenY = (Math.floor(this.screenHeight / 2) * tileSize) + offsetY + 4;
+  const screenX = (Math.floor(this.screenWidth / 2) * tileSize) + offsetX + 4;
+  const screenY = (Math.floor(this.screenHeight / 2) * tileSize) + offsetY + 4;
 
-this.ctx.fillStyle = "#0ff";
-this.ctx.fillRect(
-  screenX,
-  screenY,
-  player.size,
-  player.size
-);
+  if (this.playerImage?.complete && this.playerImage.naturalWidth > 0) {
+  this.ctx.drawImage(
+    this.playerImage,
+    screenX,
+    screenY,
+    tileSize,
+    tileSize
+  );
+} else {
+  this.ctx.fillStyle = "#0ff";
+  this.ctx.fillRect(
+    screenX,
+    screenY,
+    player.size,
+    player.size
+  );
+}
 
 }
 }
-
-
