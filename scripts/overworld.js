@@ -1,8 +1,12 @@
 import { Scene } from './scene.js';
+import { BattleScene } from './battle.js';
+
 
 export class OverworldScene extends Scene {
-  constructor() {
+constructor(changeSceneCallback) {
   super();
+
+  this.changeScene = changeSceneCallback; // ✅ store the scene switcher
 
   this.tileTypes = {
     0: { name: "wall", color: "red", passable: false, image: "wall.png"},
@@ -10,6 +14,8 @@ export class OverworldScene extends Scene {
     2: { name: "grass", color: "green", passable: true, image: "grass.png" },
     3: { name: "water", color: "blue", passable: false }
   };
+
+
 
   this.tileSize = 32;
   this.screenWidth = 15;
@@ -34,6 +40,11 @@ this.player = {
 
 
   this.keys = {};
+
+  this.battling = false;
+  this.fading = false;
+  this.fadeOpacity = 0;
+
   this.inBattle = false;
 
 }
@@ -128,11 +139,16 @@ this.playerImage.onerror = () => console.error("❌ Failed to load player sprite
   player.moving = false;
 
   const tile = map[player.y][player.x];
-  if (tile === 2) {
-    console.log("🌿 Wild battle triggered!");
-    this.inBattle = true;
-    // Here’s where you’d eventually swap scenes or show a battle menu
-  }
+  if (tile === 2 && !this.inBattle) {
+  console.log("🌿 Wild battle triggered!");
+  this.inBattle = true;
+
+  setTimeout(() => {
+    this.changeScene(new BattleScene(this.changeScene));
+  }, 100);
+}
+
+
 }
 
   }
