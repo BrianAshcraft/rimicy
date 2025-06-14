@@ -1,5 +1,6 @@
 import { Scene } from './scene.js';
 import { BattleScene } from './battle.js';
+import { enemies } from './enemies.js';
 
 
 export class OverworldScene extends Scene {
@@ -143,8 +144,11 @@ this.playerImage.onerror = () => console.error("❌ Failed to load player sprite
   console.log("🌿 Wild battle triggered!");
   this.inBattle = true;
 
+  const enemyToFight = enemies.slime;
+
   setTimeout(() => {
-    this.changeScene(new BattleScene(this.changeScene));
+    this.changeScene(new BattleScene(this.changeScene, enemies.slime));
+
   }, 100);
 }
 
