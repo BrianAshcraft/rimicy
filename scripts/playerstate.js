@@ -6,5 +6,6 @@ export const player = {
   attack: 15,
   defense: 5,
   level: 1,
-  xp: 0
+  xp: 0,
+  
 };

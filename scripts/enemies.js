@@ -5,7 +5,8 @@ export const enemies = {
     hp: 60,
     maxHp: 60,
     attack: 10,
-    defense: 2
+    defense: 2,
+    image: "slime.png"
   },
   goblin: {
     name: "Wild Goblin",

@@ -12,26 +12,73 @@ export class BattleScene extends Scene {
   }
 
   start() {
-    document.body.innerHTML = '';
+  document.body.innerHTML = '';
 
-    const title = document.createElement("h2");
-    title.textContent = `${this.enemy.name} appeared!`;
-    document.body.appendChild(title);
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = 480;
+  this.canvas.height = 320;
+  this.ctx = this.canvas.getContext('2d');
+  this.ctx.imageSmoothingEnabled = false;
 
-    this.hpDisplay = document.createElement("div");
-    this.updateBattleText();
-    document.body.appendChild(this.hpDisplay);
+  document.body.appendChild(this.canvas);
+  window.addEventListener("keydown", this.handleKeyDown);
 
-    const btnAttack = document.createElement("button");
-    btnAttack.textContent = "Attack";
-    btnAttack.onclick = () => this.playerAttack();
-    document.body.appendChild(btnAttack);
+  // Load background and sprites
+  this.background = new Image();
+  this.background.src = 'assets/battle-bg.png'; // Provide this asset
 
-    const btnRun = document.createElement("button");
-    btnRun.textContent = "Run";
-    btnRun.onclick = () => this.changeScene(new OverworldScene(this.changeScene));
-    document.body.appendChild(btnRun);
+  this.playerSprite = new Image();
+  this.playerSprite.src = 'assets/player-backsprite.png'; // Provide this asset
+
+  this.enemySprite = new Image();
+  this.enemySprite.src = 'assets/slime.png'; // or whatever matches the enemy
+
+  // Create a loop
+  requestAnimationFrame(() => this.draw());
+}
+
+
+draw() {
+  const ctx = this.ctx;
+  ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+  // Background
+  if (this.background.complete) {
+    ctx.drawImage(this.background, 0, 0, this.canvas.width, this.canvas.height);
+  } else {
+    ctx.fillStyle = '#222';
+    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
   }
+
+  // Player back sprite
+  if (this.playerSprite.complete) {
+    ctx.drawImage(this.playerSprite, 50, 180, 64, 64);
+  }
+
+  // Enemy front sprite
+  if (this.enemySprite.complete) {
+    ctx.drawImage(this.enemySprite, 300, 60, 64, 64);
+  }
+
+  // Draw HP bars and names
+  ctx.fillStyle = 'white';
+  ctx.font = '16px monospace';
+  ctx.fillText(this.player.name, 40, 170);
+  ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 40, 190);
+  ctx.fillText(this.enemy.name, 300, 50);
+  ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 300, 70);
+
+  // Draw menu box
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 240, this.canvas.width, 80);
+  ctx.strokeStyle = 'white';
+  ctx.strokeRect(0, 240, this.canvas.width, 80);
+  ctx.fillStyle = 'white';
+  ctx.fillText("1. Attack    2. Run", 20, 270);
+
+  requestAnimationFrame(() => this.draw());
+}
+
 
   updateBattleText() {
     this.hpDisplay.innerHTML = `
@@ -66,5 +113,13 @@ export class BattleScene extends Scene {
       alert("You were defeated...");
       this.changeScene(new OverworldScene(this.changeScene));
     }
+    handleKeyDown = (e) => {
+  if (e.key === "1") {
+    this.playerAttack();  // Perform attack
+  } else if (e.key === "2") {
+    this.changeScene(new OverworldScene(this.changeScene));  // Run away
+  }
+};
+
   }
 }
