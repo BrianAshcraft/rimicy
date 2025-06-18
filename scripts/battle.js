@@ -6,36 +6,58 @@ export class BattleScene extends Scene {
   constructor(changeSceneCallback, enemy) {
     super();
     this.changeScene = changeSceneCallback;
+    this.player = player;
+    this.enemy = structuredClone(enemy);
 
-    this.player = player;           // shared player state
-    this.enemy = structuredClone(enemy); // fresh copy of enemy so we don't mutate global definitions
+    // Bind the method once to ensure correct `this` context
+    this.handleKeyDown = this.handleKeyDown.bind(this);
   }
 
   start() {
-  document.body.innerHTML = '';
+    document.body.innerHTML = '';
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 480;
+    this.canvas.height = 320;
+    this.ctx = this.canvas.getContext('2d');
+    document.body.appendChild(this.canvas);
 
-  this.canvas = document.createElement('canvas');
-  this.canvas.width = 480;
-  this.canvas.height = 320;
-  this.ctx = this.canvas.getContext('2d');
-  this.ctx.imageSmoothingEnabled = false;
+    // Register input
+    window.removeEventListener("keydown", this.handleKeyDown);
+    window.addEventListener("keydown", this.handleKeyDown);
 
-  document.body.appendChild(this.canvas);
-  window.addEventListener("keydown", this.handleKeyDown);
+    // Load images...
+    this.background = new Image();
+    this.background.src = 'assets/battle-bg.png';
 
-  // Load background and sprites
-  this.background = new Image();
-  this.background.src = 'assets/battle-bg.png'; // Provide this asset
+    this.playerSprite = new Image();
+    this.playerSprite.src = 'assets/player-backsprite.png';
 
-  this.playerSprite = new Image();
-  this.playerSprite.src = 'assets/player-backsprite.png'; // Provide this asset
+    this.enemySprite = new Image();
+    this.enemySprite.src = `assets/${this.enemy.image}`;
 
-  this.enemySprite = new Image();
-  this.enemySprite.src = 'assets/slime.png'; // or whatever matches the enemy
+    requestAnimationFrame(() => this.draw());
+  }
 
-  // Create a loop
-  requestAnimationFrame(() => this.draw());
-}
+  // ⬇️⬇️⬇️ Put this OUTSIDE of start(), below the other methods ⬇️⬇️⬇️
+  handleKeyDown(e) {
+    if (e.key === "1") {
+      console.log("⚔️ Player chose to attack");
+      this.playerAttack();
+    } else if (e.key === "2") {
+      console.log("🏃 Player chose to run");
+      this.changeScene(new OverworldScene(this.changeScene));
+    }
+  }
+
+  playerAttack() {
+    console.log("Player attacks!");
+    // ... damage logic
+  }
+
+  enemyAttack() {
+    console.log("Enemy attacks!");
+    // ... damage logic
+  }
 
 
 draw() {
@@ -81,45 +103,41 @@ draw() {
 
 
   updateBattleText() {
-    this.hpDisplay.innerHTML = `
-      <p><strong>${this.player.name}</strong>: ${this.player.hp} / ${this.player.maxHp} HP</p>
-      <p><strong>${this.enemy.name}</strong>: ${this.enemy.hp} / ${this.enemy.maxHp} HP</p>
-    `;
-  }
+  this.ctx.fillStyle = 'white';
+  this.ctx.font = '16px monospace';
+  this.ctx.fillText(this.player.name, 40, 170);
+  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 40, 190);
+  this.ctx.fillText(this.enemy.name, 300, 50);
+  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 300, 70);
+}
+
 
   playerAttack() {
-    const damage = Math.max(0, this.player.attack - this.enemy.defense);
-    this.enemy.hp -= damage;
-    if (this.enemy.hp < 0) this.enemy.hp = 0;
+  const damage = Math.max(0, this.player.attack - this.enemy.defense);
+  this.enemy.hp -= damage;
+  if (this.enemy.hp < 0) this.enemy.hp = 0;
 
-    this.updateBattleText();
+  this.updateBattleText();
 
-    if (this.enemy.hp <= 0) {
-      alert(`${this.enemy.name} was defeated!`);
-      this.changeScene(new OverworldScene(this.changeScene));
-    } else {
-      setTimeout(() => this.enemyAttack(), 500);
-    }
+  if (this.enemy.hp <= 0) {
+    alert(`${this.enemy.name} was defeated!`);
+    this.changeScene(new OverworldScene(this.changeScene));
+  } else {
+    setTimeout(() => this.enemyAttack(), 500);
   }
+}
+
 
   enemyAttack() {
-    const damage = Math.max(0, this.enemy.attack - this.player.defense);
-    this.player.hp -= damage;
-    if (this.player.hp < 0) this.player.hp = 0;
+  const damage = Math.max(0, this.enemy.attack - this.player.defense);
+  this.player.hp -= damage;
+  if (this.player.hp < 0) this.player.hp = 0;
 
-    this.updateBattleText();
+  this.updateBattleText();
 
-    if (this.player.hp <= 0) {
-      alert("You were defeated...");
-      this.changeScene(new OverworldScene(this.changeScene));
-    }
-    handleKeyDown = (e) => {
-  if (e.key === "1") {
-    this.playerAttack();  // Perform attack
-  } else if (e.key === "2") {
-    this.changeScene(new OverworldScene(this.changeScene));  // Run away
+  if (this.player.hp <= 0) {
+    alert("You were defeated...");
+    this.changeScene(new OverworldScene(this.changeScene));
   }
-};
-
-  }
+}
 }
