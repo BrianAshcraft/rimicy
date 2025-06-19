@@ -18,8 +18,12 @@ export class BattleScene extends Scene {
     this.canvas = document.createElement('canvas');
     this.canvas.width = 480;
     this.canvas.height = 320;
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
+    this.ctx.imageSmoothingEnabled = false;
+    this.canvas.style.width = this.canvas.width * 2 + "px";
+    this.canvas.style.height = this.canvas.height * 2 + "px";
     document.body.appendChild(this.canvas);
+
 
     // Register input
     window.removeEventListener("keydown", this.handleKeyDown);
