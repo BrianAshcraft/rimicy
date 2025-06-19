@@ -88,11 +88,14 @@ draw() {
 
   // Draw HP bars and names
 this.ctx.fillStyle = 'black';
-  this.ctx.font = '16px monospace';
-  this.ctx.fillText(this.player.name, 80, 330);
-  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
-  this.ctx.fillText(this.enemy.name, 680, 100);
-  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
+  ctx.font = '16px monospace';
+  ctx.fillText(this.player.name, 80, 330);
+  ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
+  ctx.fillText(this.enemy.name, 680, 100);
+  ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
+  ctx.fillText(`Level: ${this.player.level}`, 100, 480);
+  ctx.fillText(`XP: ${this.player.xp}`, 100, 510);
+
 
 
   // Draw menu box
@@ -131,10 +134,12 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
   this.enemy.hp -= damage;
   if (this.enemy.hp < 0) this.enemy.hp = 0;
 
-  this.updateBattleText();
-
   if (this.enemy.hp <= 0) {
-    alert(`${this.enemy.name} was defeated!`);
+    // ✅ Award XP
+    const earned = this.enemy.xpReward || 0;
+    this.player.xp += earned;
+    alert(`${this.enemy.name} was defeated!\nYou gained ${earned} XP.`);
+
     this.changeScene(new OverworldScene(this.changeScene));
   } else {
     setTimeout(() => this.enemyAttack(), 500);
