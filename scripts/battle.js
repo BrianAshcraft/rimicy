@@ -16,12 +16,12 @@ export class BattleScene extends Scene {
   start() {
     document.body.innerHTML = '';
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 480;
-    this.canvas.height = 320;
+    this.canvas.width = 960;
+    this.canvas.height = 640;
     this.ctx = this.canvas.getContext("2d");
-    this.ctx.imageSmoothingEnabled = false;
-    this.canvas.style.width = this.canvas.width * 2 + "px";
-    this.canvas.style.height = this.canvas.height * 2 + "px";
+    this.ctx.imageSmoothingEnabled = true;
+    this.canvas.style.width = this.canvas.width + "px";
+    this.canvas.style.height = this.canvas.height + "px";
     document.body.appendChild(this.canvas);
 
 
@@ -78,29 +78,39 @@ draw() {
 
   // Player back sprite
   if (this.playerSprite.complete) {
-    ctx.drawImage(this.playerSprite, 50, 180, 64, 64);
+    ctx.drawImage(this.playerSprite, 120, 350, 128, 128);
   }
 
   // Enemy front sprite
   if (this.enemySprite.complete) {
-    ctx.drawImage(this.enemySprite, 300, 60, 64, 64);
+    ctx.drawImage(this.enemySprite, 730, 180, 128, 128);
   }
 
   // Draw HP bars and names
-  ctx.fillStyle = 'white';
-  ctx.font = '16px monospace';
-  ctx.fillText(this.player.name, 40, 170);
-  ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 40, 190);
-  ctx.fillText(this.enemy.name, 300, 50);
-  ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 300, 70);
+this.ctx.fillStyle = 'black';
+  this.ctx.font = '16px monospace';
+  this.ctx.fillText(this.player.name, 80, 330);
+  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
+  this.ctx.fillText(this.enemy.name, 680, 100);
+  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
+
 
   // Draw menu box
-  ctx.fillStyle = 'black';
-  ctx.fillRect(0, 240, this.canvas.width, 80);
-  ctx.strokeStyle = 'white';
-  ctx.strokeRect(0, 240, this.canvas.width, 80);
-  ctx.fillStyle = 'white';
-  ctx.fillText("1. Attack    2. Run", 20, 270);
+// Draw menu box pinned to bottom
+const menuBoxHeight = 120;
+const menuY = this.canvas.height - menuBoxHeight;
+
+ctx.fillStyle = 'black';
+ctx.fillRect(0, menuY, this.canvas.width, menuBoxHeight);
+
+ctx.strokeStyle = 'white';
+ctx.strokeRect(0, menuY, this.canvas.width, menuBoxHeight);
+
+// Menu options
+ctx.fillStyle = 'white';
+ctx.font = '28px monospace';
+ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
+
 
   requestAnimationFrame(() => this.draw());
 }
@@ -109,10 +119,10 @@ draw() {
   updateBattleText() {
   this.ctx.fillStyle = 'white';
   this.ctx.font = '16px monospace';
-  this.ctx.fillText(this.player.name, 40, 170);
-  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 40, 190);
-  this.ctx.fillText(this.enemy.name, 300, 50);
-  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 300, 70);
+  this.ctx.fillText(this.player.name, 80, 330);
+  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
+  this.ctx.fillText(this.enemy.name, 680, 100);
+  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
 }
 
 

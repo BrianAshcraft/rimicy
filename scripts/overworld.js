@@ -18,7 +18,7 @@ constructor(changeSceneCallback) {
 
 
 
-  this.tileSize = 32;
+  this.tileSize = 64;
   this.screenWidth = 15;
   this.screenHeight = 10;
 
@@ -31,7 +31,7 @@ constructor(changeSceneCallback) {
 this.player = {
   x: 10,
   y: 10,
-  size: 14,       // ✅ fits inside a 16x16 tile
+  size: 28,       // ✅ fits inside a 16x16 tile
   speed: 4,
   moving: false,
   moveProgress: 0,
