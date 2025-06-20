@@ -70,8 +70,10 @@ this.ctx = this.canvas.getContext("2d");
 
 // Scale up visually without smoothing
 this.ctx.imageSmoothingEnabled = false;
-this.canvas.style.width = this.canvas.width * 2 + "px";
-this.canvas.style.height = this.canvas.height * 2 + "px";
+this.canvas.style.width = this.canvas.width + "px";
+this.canvas.style.height = this.canvas.height + "px";
+this.ctx.imageSmoothingEnabled = true;
+
 
 
 this.tileImages = {};
