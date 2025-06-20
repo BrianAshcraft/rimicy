@@ -146,14 +146,20 @@ this.playerImage.onerror = () => console.error("❌ Failed to load player sprite
   console.log("🌿 Wild battle triggered!");
   this.inBattle = true;
 
-  const enemyToFight = enemies.slime;
+    // Get list of enemy keys
+  const enemyKeys = Object.keys(enemies);
+
+  // Pick one at random
+  const randomKey = enemyKeys[Math.floor(Math.random() * enemyKeys.length)];
+  const baseEnemy = enemies[randomKey];
+
+  // Clone and reset its HP
+  const enemyToFight = structuredClone(baseEnemy);
+  enemyToFight.hp = enemyToFight.maxHp;
 
   setTimeout(() => {
-    this.changeScene(new BattleScene(this.changeScene, enemies.slime));
-
+    this.changeScene(new BattleScene(this.changeScene, enemyToFight));
   }, 100);
-}
-
 
 }
 
@@ -227,4 +233,4 @@ for (let row = 0; row < this.screenHeight; row++) {
 }
 
 }
-}
+}};
