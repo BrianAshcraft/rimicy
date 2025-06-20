@@ -1,6 +1,8 @@
 import { Scene } from './scene.js';
 import { OverworldScene } from './overworld.js';
 import { player } from './playerstate.js';
+import { getXpForNextLevel } from './playerstate.js';
+
 
 export class BattleScene extends Scene {
   constructor(changeSceneCallback, enemy) {
@@ -135,16 +137,30 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
   if (this.enemy.hp < 0) this.enemy.hp = 0;
 
   if (this.enemy.hp <= 0) {
-    // ✅ Award XP
-    const earned = this.enemy.xpReward || 0;
-    this.player.xp += earned;
-    alert(`${this.enemy.name} was defeated!\nYou gained ${earned} XP.`);
+  const earned = this.enemy.xpReward || 0;
+  this.player.xp += earned;
 
+  let levelUp = false;
+
+    while (this.player.xp >= getXpForNextLevel(this.player.level)) {
+      this.player.xp -= getXpForNextLevel(this.player.level);
+      this.player.level++;
+      levelUp = true;
+      this.player.maxHp += 10;
+      this.player.attack += 2;
+      this.player.defense += 1;
+
+    }
+
+    let message = `${this.enemy.name} was defeated!\nYou gained ${earned} XP.`;
+    if (levelUp) {
+      message += `\n🎉 You leveled up to level ${this.player.level}!`;
+    }
+
+    alert(message);
     this.changeScene(new OverworldScene(this.changeScene));
-  } else {
-    setTimeout(() => this.enemyAttack(), 500);
   }
-}
+  }
 
 
   enemyAttack() {

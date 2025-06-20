@@ -9,3 +9,7 @@ export const player = {
   xp: 0,
   
 };
+
+export function getXpForNextLevel(level) {
+  return 20 + (level - 1) * 15; // You can tune this curve later
+}
