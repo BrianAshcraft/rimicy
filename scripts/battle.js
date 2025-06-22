@@ -8,12 +8,14 @@ export class BattleScene extends Scene {
   constructor(changeSceneCallback, enemy) {
     super();
     this.changeScene = changeSceneCallback;
-    this.player = player;
-    this.enemy = structuredClone(enemy);
 
-    // Bind the method once to ensure correct `this` context
+    // Clone player and enemy so state doesn't leak between battles
+    this.player = player;
+    this.enemy = enemy;
+      console.log("🧪 New battle created with enemy:", enemy);
     this.handleKeyDown = this.handleKeyDown.bind(this);
   }
+
 
   start() {
     document.body.innerHTML = '';
@@ -53,16 +55,6 @@ export class BattleScene extends Scene {
       console.log("🏃 Player chose to run");
       this.changeScene(new OverworldScene(this.changeScene));
     }
-  }
-
-  playerAttack() {
-    console.log("Player attacks!");
-    // ... damage logic
-  }
-
-  enemyAttack() {
-    console.log("Enemy attacks!");
-    // ... damage logic
   }
 
 
@@ -131,17 +123,16 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
 }
 
 
-  playerAttack() {
+playerAttack() {
   const damage = Math.max(0, this.player.attack - this.enemy.defense);
   this.enemy.hp -= damage;
   if (this.enemy.hp < 0) this.enemy.hp = 0;
 
   if (this.enemy.hp <= 0) {
-  const earned = this.enemy.xpReward || 0;
-  this.player.xp += earned;
+    const earned = this.enemy.xpReward || 0;
+    this.player.xp += earned;
 
-  let levelUp = false;
-
+    let levelUp = false;
     while (this.player.xp >= getXpForNextLevel(this.player.level)) {
       this.player.xp -= getXpForNextLevel(this.player.level);
       this.player.level++;
@@ -149,7 +140,6 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
       this.player.maxHp += 10;
       this.player.attack += 2;
       this.player.defense += 1;
-
     }
 
     let message = `${this.enemy.name} was defeated!\nYou gained ${earned} XP.`;
@@ -159,8 +149,13 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
 
     alert(message);
     this.changeScene(new OverworldScene(this.changeScene));
+  } else {
+    // ⬅️ Enemy's turn if not defeated
+    setTimeout(() => this.enemyAttack(), 500);
   }
-  }
+}
+
+  
 
 
   enemyAttack() {
@@ -174,5 +169,4 @@ ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
     alert("You were defeated...");
     this.changeScene(new OverworldScene(this.changeScene));
   }
-}
-}
+}}

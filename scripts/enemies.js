@@ -1,8 +1,6 @@
-// enemies.js
 export const enemies = {
   slime: {
     name: "Wild Slime",
-    hp: 60,
     maxHp: 60,
     attack: 10,
     defense: 2,
@@ -11,11 +9,34 @@ export const enemies = {
   },
   goblin: {
     name: "Wild Goblin",
-    hp: 80,
     maxHp: 80,
     attack: 12,
     defense: 3,
-    image: "",
+    image: "goblin.jpg",
     xpReward: 9,
+  },
+  TheAlmighty: {
+    name: "The Allmighty",
+    maxHp: 700,
+    attack: 12,
+    defense: 0.5,
+    image: "almighty.png",
+    xpReward: 1000,
   }
 };
+
+export function createEnemy(type) {
+  const base = enemies[type];
+  if (!base) throw new Error(`Unknown enemy type: ${type}`);
+
+  return {
+    name: base.name,
+    maxHp: base.maxHp,
+    hp: base.maxHp,
+    attack: base.attack,
+    defense: base.defense,
+    image: base.image,
+    xpReward: base.xpReward,
+    type: type // optional, helps track what was spawned
+  };
+}
