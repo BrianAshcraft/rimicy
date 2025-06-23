@@ -1,172 +1,128 @@
-import { Scene } from './scene.js';
-import { OverworldScene } from './overworld.js';
 import { player } from './playerstate.js';
-import { getXpForNextLevel } from './playerstate.js';
+export function injectSetGameState(fn) {
+  setGameStateFunc = fn;
+}
+
+let enemyImg = new Image();
+let currentEnemy = null;
+let battleText = '';
+let waitingForInput = true;
+let setGameStateFunc = null;
+let backgroundImg = new Image();
+backgroundImg.src = 'assets/battle-bg.png'; // adjust if named differently
+let playerImg = new Image();
+playerImg.src = 'assets/player-backsprite.png'; // Make sure this image exists
 
 
-export class BattleScene extends Scene {
-  constructor(changeSceneCallback, enemy) {
-    super();
-    this.changeScene = changeSceneCallback;
 
-    // Clone player and enemy so state doesn't leak between battles
-    this.player = player;
-    this.enemy = enemy;
-      console.log("🧪 New battle created with enemy:", enemy);
-    this.handleKeyDown = this.handleKeyDown.bind(this);
+export function startBattleWithEnemy(enemy) {
+  enemyImg = new Image();
+  enemyImg.src = `assets/${enemy.image}`;
+
+  currentEnemy = { ...enemy }; // fresh copy
+  battleText = `A wild ${currentEnemy.name} appears!`;
+  waitingForInput = true;
+
+  window.addEventListener('keydown', handleBattleInput);
+  setGameStateFunc('battle');
+}
+
+
+function handleBattleInput(e) {
+  if (!waitingForInput) return;
+
+  if (e.key === '1') {
+    waitingForInput = false;
+    performPlayerAttack();
+  } else if (e.key === '2') {
+  window.removeEventListener('keydown', handleBattleInput);
+  setGameStateFunc('overworld');
+  }
+}
+
+function performPlayerAttack() {
+  const dmg = Math.max(0, player.attack - currentEnemy.defense);
+  currentEnemy.hp -= dmg;
+  battleText = `You dealt ${dmg} damage!`;
+
+  if (currentEnemy.hp <= 0) {
+    player.xp += currentEnemy.xpReward;
+    battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
+    setTimeout(() => {
+      window.removeEventListener('keydown', handleBattleInput);
+      setGameStateFunc('overworld')    }, 1000);
+    return;
   }
 
+  setTimeout(() => {
+    performEnemyAttack();
+  }, 500);
+}
 
-  start() {
-    document.body.innerHTML = '';
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = 960;
-    this.canvas.height = 640;
-    this.ctx = this.canvas.getContext("2d");
-    this.ctx.imageSmoothingEnabled = true;
-    this.canvas.style.width = this.canvas.width + "px";
-    this.canvas.style.height = this.canvas.height + "px";
-    document.body.appendChild(this.canvas);
+function performEnemyAttack() {
+  const dmg = Math.max(0, currentEnemy.attack - player.defense);
+  player.hp -= dmg;
+  battleText = `${currentEnemy.name} hits for ${dmg} damage!`;
 
-
-    // Register input
-    window.removeEventListener("keydown", this.handleKeyDown);
-    window.addEventListener("keydown", this.handleKeyDown);
-
-    // Load images...
-    this.background = new Image();
-    this.background.src = 'assets/battle-bg.png';
-
-    this.playerSprite = new Image();
-    this.playerSprite.src = 'assets/player-backsprite.png';
-
-    this.enemySprite = new Image();
-    this.enemySprite.src = `assets/${this.enemy.image}`;
-
-    requestAnimationFrame(() => this.draw());
+  if (player.hp <= 0) {
+    battleText = 'You lost...';
+    setTimeout(() => {
+      window.removeEventListener('keydown', handleBattleInput);
+      gameState = 'title';
+    }, 1000);
+  } else {
+    waitingForInput = true;
   }
+}
 
-  // ⬇️⬇️⬇️ Put this OUTSIDE of start(), below the other methods ⬇️⬇️⬇️
-  handleKeyDown(e) {
-    if (e.key === "1") {
-      console.log("⚔️ Player chose to attack");
-      this.playerAttack();
-    } else if (e.key === "2") {
-      console.log("🏃 Player chose to run");
-      this.changeScene(new OverworldScene(this.changeScene));
-    }
-  }
+export function updateBattle() {
+  // Nothing dynamic for now
+}
 
-
-draw() {
-  const ctx = this.ctx;
-  ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+export function drawBattle(ctx) {
+  ctx.clearRect(0, 0, 960, 640);
 
   // Background
-  if (this.background.complete) {
-    ctx.drawImage(this.background, 0, 0, this.canvas.width, this.canvas.height);
+  if (backgroundImg.complete) {
+    const textboxHeight = 160;
+const backgroundHeight = 640 - textboxHeight;
+
+ctx.drawImage(backgroundImg, 0, 0, 960, backgroundHeight);
+
   } else {
-    ctx.fillStyle = '#222';
-    ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, 960, 640);
   }
 
-  // Player back sprite
-  if (this.playerSprite.complete) {
-    ctx.drawImage(this.playerSprite, 120, 350, 128, 128);
+  // Enemy sprite
+  if (enemyImg.complete) {
+    ctx.drawImage(enemyImg, 580, 100, 200, 200);
+  }
+  // Player sprite
+  if (playerImg.complete) {
+    ctx.drawImage(playerImg, 180, 200, 160, 160); // Adjust coords/size as needed
   }
 
-  // Enemy front sprite
-  if (this.enemySprite.complete) {
-    ctx.drawImage(this.enemySprite, 730, 180, 128, 128);
-  }
 
-  // Draw HP bars and names
-this.ctx.fillStyle = 'black';
-  ctx.font = '16px monospace';
-  ctx.fillText(this.player.name, 80, 330);
-  ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
-  ctx.fillText(this.enemy.name, 680, 100);
-  ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
-  ctx.fillText(`Level: ${this.player.level}`, 100, 480);
-  ctx.fillText(`XP: ${this.player.xp}`, 100, 510);
+// Text box dimensions
+const boxMargin = 20;
+const boxHeight = 140;
+const boxY = 640 - boxHeight - boxMargin; // canvas height = 640
 
-
-
-  // Draw menu box
-// Draw menu box pinned to bottom
-const menuBoxHeight = 120;
-const menuY = this.canvas.height - menuBoxHeight;
-
-ctx.fillStyle = 'black';
-ctx.fillRect(0, menuY, this.canvas.width, menuBoxHeight);
-
+ctx.fillStyle = 'rgba(184, 184, 184, 0.6)';
 ctx.strokeStyle = 'white';
-ctx.strokeRect(0, menuY, this.canvas.width, menuBoxHeight);
+ctx.lineWidth = 3;
 
-// Menu options
-ctx.fillStyle = 'white';
-ctx.font = '28px monospace';
-ctx.fillText("1. Attack    2. Run", 40, menuY + 70);
+ctx.beginPath();
+ctx.roundRect(boxMargin, boxY, 960 - boxMargin * 2, boxHeight, 12);
+ctx.fill();
+ctx.stroke();
 
+// Text inside box
+ctx.fillStyle = 'black';
+ctx.font = '20px monospace';
+ctx.fillText(battleText, boxMargin + 20, boxY + 40);
+ctx.fillText('1. Attack   2. Run', boxMargin + 20, boxY + 90);
 
-  requestAnimationFrame(() => this.draw());
 }
 
-
-  updateBattleText() {
-  this.ctx.fillStyle = 'white';
-  this.ctx.font = '16px monospace';
-  this.ctx.fillText(this.player.name, 80, 330);
-  this.ctx.fillText(`${this.player.hp} / ${this.player.maxHp}`, 80, 370);
-  this.ctx.fillText(this.enemy.name, 680, 100);
-  this.ctx.fillText(`${this.enemy.hp} / ${this.enemy.maxHp}`, 680, 140);
-}
-
-
-playerAttack() {
-  const damage = Math.max(0, this.player.attack - this.enemy.defense);
-  this.enemy.hp -= damage;
-  if (this.enemy.hp < 0) this.enemy.hp = 0;
-
-  if (this.enemy.hp <= 0) {
-    const earned = this.enemy.xpReward || 0;
-    this.player.xp += earned;
-
-    let levelUp = false;
-    while (this.player.xp >= getXpForNextLevel(this.player.level)) {
-      this.player.xp -= getXpForNextLevel(this.player.level);
-      this.player.level++;
-      levelUp = true;
-      this.player.maxHp += 10;
-      this.player.attack += 2;
-      this.player.defense += 1;
-    }
-
-    let message = `${this.enemy.name} was defeated!\nYou gained ${earned} XP.`;
-    if (levelUp) {
-      message += `\n🎉 You leveled up to level ${this.player.level}!`;
-    }
-
-    alert(message);
-    this.changeScene(new OverworldScene(this.changeScene));
-  } else {
-    // ⬅️ Enemy's turn if not defeated
-    setTimeout(() => this.enemyAttack(), 500);
-  }
-}
-
-  
-
-
-  enemyAttack() {
-  const damage = Math.max(0, this.enemy.attack - this.player.defense);
-  this.player.hp -= damage;
-  if (this.player.hp < 0) this.player.hp = 0;
-
-  this.updateBattleText();
-
-  if (this.player.hp <= 0) {
-    alert("You were defeated...");
-    this.changeScene(new OverworldScene(this.changeScene));
-  }
-}}

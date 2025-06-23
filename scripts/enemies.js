@@ -1,4 +1,4 @@
-export const enemies = {
+export const enemyData = {
   slime: {
     name: "Wild Slime",
     maxHp: 60,
@@ -22,11 +22,11 @@ export const enemies = {
     defense: 0.5,
     image: "almighty.png",
     xpReward: 1000,
-  }
+  },
 };
 
 export function createEnemy(type) {
-  const base = enemies[type];
+  const base = enemyData[type];
   if (!base) throw new Error(`Unknown enemy type: ${type}`);
 
   return {
@@ -37,6 +37,6 @@ export function createEnemy(type) {
     defense: base.defense,
     image: base.image,
     xpReward: base.xpReward,
-    type: type // optional, helps track what was spawned
+    type: type
   };
 }
