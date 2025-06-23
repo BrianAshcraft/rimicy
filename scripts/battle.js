@@ -111,7 +111,8 @@ ctx.fillText(`${currentEnemy.name}`, 580, 90); // top-right area
 
 // Player name and level (hardcoded for now)
 ctx.fillText(`${player.name} Lv.${player.level}`, 220, 450); // above player
-
+ctx.font = '16px monospace';
+ctx.fillText(`HP: ${Math.max(0, player.hp)} / ${player.maxHp}`, 220, 470);
 // Text box dimensions
 const boxMargin = 20;
 const boxHeight = 140;
