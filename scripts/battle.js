@@ -100,9 +100,17 @@ ctx.drawImage(backgroundImg, 0, 0, 960, backgroundHeight);
   }
   // Player sprite
   if (playerImg.complete) {
-    ctx.drawImage(playerImg, 180, 200, 160, 160); // Adjust coords/size as needed
+    ctx.drawImage(playerImg, 40, 280, 160, 160); // Adjust coords/size as needed
   }
 
+
+  // Enemy name and level
+ctx.fillStyle = 'white';
+ctx.font = '18px monospace';
+ctx.fillText(`${currentEnemy.name}`, 580, 90); // top-right area
+
+// Player name and level (hardcoded for now)
+ctx.fillText(`${player.name} Lv.${player.level}`, 220, 450); // above player
 
 // Text box dimensions
 const boxMargin = 20;
