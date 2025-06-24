@@ -53,25 +53,31 @@ function handleBattleInput(e) {
 
 
 function performPlayerAttack(move) {
-  const dmg = Math.max(0, move.power - currentEnemy.defense);
-  currentEnemy.hp -= dmg;
-  battleText = `You used ${move.name}! It dealt ${dmg} damage!`;
-
-  if (currentEnemy.hp <= 0) {
-    player.xp += currentEnemy.xpReward;
-    battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
-    setTimeout(() => {
-      window.removeEventListener('keydown', handleBattleInput);
-      setGameStateFunc('overworld');
-    }, 1000);
+  if (player.energy < move.cost) {
+    battleText = `Not enough energy to use ${move.name}!`;
+    inAttackMenu = false;
     return;
   }
+
+  player.energy -= move.cost;
+
+  const dmg = Math.max(0, move.power - currentEnemy.defense);
+  currentEnemy.hp -= dmg;
+
+  battleText = `You used ${move.name}! It dealt ${dmg} damage!`;
+
+  if (player.hp <= 0) {
+  battleText = 'You lost...';
+  setTimeout(() => {
+    window.removeEventListener('keydown', handleBattleInput);
+    setGameStateFunc('title');
+  }, 1000);
+}
 
   setTimeout(() => {
     performEnemyAttack();
   }, 500);
 }
-
 
 function performEnemyAttack() {
   const dmg = Math.max(0, currentEnemy.attack - player.defense);
@@ -82,12 +88,15 @@ function performEnemyAttack() {
     battleText = 'You lost...';
     setTimeout(() => {
       window.removeEventListener('keydown', handleBattleInput);
-      gameState = 'title';
+      setGameStateFunc('title');
     }, 1000);
   } else {
+    // ✅ Refill energy here — at start of player's next turn
+    player.energy = Math.min(player.maxEnergy, player.energy + player.regen);
     waitingForInput = true;
   }
 }
+
 
 export function updateBattle() {
   // Nothing dynamic for now
@@ -127,6 +136,8 @@ ctx.fillText(`${currentEnemy.name}`, 580, 90); // top-right area
 ctx.fillText(`${player.name} Lv.${player.level}`, 220, 450); // above player
 ctx.font = '16px monospace';
 ctx.fillText(`HP: ${Math.max(0, player.hp)} / ${player.maxHp}`, 220, 470);
+ctx.fillStyle = '#00c3ff'; // blue for energy
+ctx.fillText(`Energy: ${player.energy} / ${player.maxEnergy}`, 220, 430);
 // Text box dimensions
 const boxMargin = 20;
 const boxHeight = 140;
@@ -149,6 +160,9 @@ if (!inAttackMenu) {
   ctx.fillText('1. Attack   2. Run', 40, boxY + 100);
 } else {
   player.moves.forEach((move, index) => {
-    ctx.fillText(`${index + 1}. ${move.name}`, 40, boxY + 80 + index * 30);
-  });
+  const affordable = player.energy >= move.cost;
+  ctx.fillStyle = affordable ? 'white' : '#888';
+  ctx.fillText(`${index + 1}. ${move.name} (${move.cost} EN)`, 40, boxY + 80 + index * 30);
+});
+
 }}
