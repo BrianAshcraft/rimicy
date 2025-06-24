@@ -6,8 +6,8 @@ export const player = {
   energy: 50,
   maxEnergy: 50,
   regen: 5, // amount regained per turn
-  attack: 15,
-  defense: 5,
+  attack: 1,
+  defense: 1,
   level: 1,
   xp: 0,
   moves: [

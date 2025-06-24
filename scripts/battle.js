@@ -1,4 +1,6 @@
 import { player } from './playerstate.js';
+import { getXpForNextLevel } from './playerstate.js';
+
 export function injectSetGameState(fn) {
   setGameStateFunc = fn;
 }
@@ -27,6 +29,22 @@ export function startBattleWithEnemy(enemy) {
 
   window.addEventListener('keydown', handleBattleInput);
   setGameStateFunc('battle');
+}
+
+
+function checkLevelUp() {
+  const xpNeeded = getXpForNextLevel(player.level);
+  while (player.xp >= xpNeeded) {
+    player.xp -= xpNeeded;
+    player.level += 1;
+    player.maxHp += 10;
+    player.hp = player.maxHp;
+    player.attack += 2;
+    player.defense += 1;
+    player.maxEnergy += 5;
+    player.energy = player.maxEnergy;
+    battleText = `You leveled up to Lv.${player.level}!`;
+  }
 }
 
 
@@ -66,18 +84,25 @@ function performPlayerAttack(move) {
 
   battleText = `You used ${move.name}! It dealt ${dmg} damage!`;
 
-  if (player.hp <= 0) {
-  battleText = 'You lost...';
-  setTimeout(() => {
-    window.removeEventListener('keydown', handleBattleInput);
-    setGameStateFunc('title');
-  }, 1000);
-}
+  if (currentEnemy.hp <= 0) {
+    player.xp += currentEnemy.xpReward;
 
+    battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
+    checkLevelUp();
+    setTimeout(() => {
+      window.removeEventListener('keydown', handleBattleInput);
+      setGameStateFunc('overworld');
+    }, 1000);
+
+    return; // ✅ important — stops enemy from attacking after death
+  }
+
+  // Enemy still alive — proceed with their attack
   setTimeout(() => {
     performEnemyAttack();
   }, 500);
 }
+
 
 function performEnemyAttack() {
   const dmg = Math.max(0, currentEnemy.attack - player.defense);
@@ -133,6 +158,8 @@ ctx.font = '18px monospace';
 ctx.fillText(`${currentEnemy.name}`, 580, 90); // top-right area
 
 // Player name and level (hardcoded for now)
+ctx.fillText(`XP: ${player.xp} / ${getXpForNextLevel(player.level)}`, 220, 410);
+
 ctx.fillText(`${player.name} Lv.${player.level}`, 220, 450); // above player
 ctx.font = '16px monospace';
 ctx.fillText(`HP: ${Math.max(0, player.hp)} / ${player.maxHp}`, 220, 470);
@@ -164,5 +191,7 @@ if (!inAttackMenu) {
   ctx.fillStyle = affordable ? 'white' : '#888';
   ctx.fillText(`${index + 1}. ${move.name} (${move.cost} EN)`, 40, boxY + 80 + index * 30);
 });
+
+
 
 }}
