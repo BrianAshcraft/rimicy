@@ -2,14 +2,20 @@ import { enemyData, createEnemy } from './enemies.js';
 import { startBattleWithEnemy } from './battle.js';
 import { updateBattle, drawBattle, injectSetGameState } from './battle.js';
 import { setGameState } from './main.js';
+import { getXpForNextLevel } from './playerstate.js';
+import { player } from './playerstate.js';
+import { savePlayerData, loadPlayerData } from './playerstate.js';
 
 let map = null;
 let tileTypes = {};
 let tileImages = {};
-let player = {};
+
 let keys = {};
 let canvas = null;
 let ctx = null;
+let menuOpen = false;
+let selectedMenuIndex = 0;
+let inStatsView = false;
 
 const tileSize = 64;
 const screenWidth = 15;
@@ -23,16 +29,15 @@ export function startOverworld() {
     3: { name: "water", color: "blue", passable: false, image: "water.png" },
   };
 
-  player = {
-    x: 10,
-    y: 10,
-    size: 28,
-    speed: 4,
-    moving: false,
-    moveProgress: 0,
-    dx: 0,
-    dy: 0
-  };
+player.x = 10;
+player.y = 10;
+player.dx = 0;
+player.dy = 0;
+player.size = 28;
+player.speed = 4;
+player.moving = false;
+player.moveProgress = 0;
+
 
   keys = {};
   tileImages = {};
@@ -49,7 +54,43 @@ export function startOverworld() {
   player.image = new Image();
   player.image.src = "assets/trainer.png";
 
-  window.addEventListener("keydown", e => keys[e.key] = true);
+  window.addEventListener("keydown", e => {
+  if (inStatsView) {
+    if (e.key === "Escape") {
+      inStatsView = false;
+    }
+    return;
+  }
+
+  if (menuOpen) {
+    if (e.key === "ArrowUp") {
+      selectedMenuIndex = (selectedMenuIndex - 1 + 4) % 4;
+    } else if (e.key === "ArrowDown") {
+      selectedMenuIndex = (selectedMenuIndex + 1) % 4;
+    } else if (e.key === "Enter") {
+      const selectedOption = ["Items", "Stats", "Save", "Options"][selectedMenuIndex];
+      if (selectedOption === "Stats") {
+        inStatsView = true;
+      }else if (selectedOption === "Save") {
+  savePlayerData();
+  alert("Game saved!");
+}
+      // Add other cases later
+    } else if (e.key === "Escape") {
+      menuOpen = false;
+    }
+    return;
+  }
+
+  if (e.key === "m") {
+    menuOpen = !menuOpen;
+    selectedMenuIndex = 0;
+    return;
+  }
+
+  keys[e.key] = true;
+});
+
   window.addEventListener("keyup", e => keys[e.key] = false);
 
   fetch("data/start-town.json")
@@ -104,6 +145,7 @@ export function updateOverworld() {
 }
 
 export function drawOverworld(ctx) {
+  
   if (!map) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -138,4 +180,58 @@ export function drawOverworld(ctx) {
     ctx.fillStyle = "#0ff";
     ctx.fillRect(px, py, player.size, player.size);
   }
+  if (menuOpen) {
+  const menuX = canvas.width - 240;
+  const menuY = 40;
+  const menuWidth = 200;
+  const menuHeight = 220;
+  const menuOptions = ["Items", "Stats", "Save", "Options"];
+
+  ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+  ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
+
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
+
+  ctx.fillStyle = "white";
+  ctx.font = "18px monospace";
+  menuOptions.forEach((option, i) => {
+    const y = menuY + 40 + i * 40;
+    ctx.fillStyle = i === selectedMenuIndex ? "#0ff" : "white";
+    ctx.fillText(option, menuX + 20, y);
+  });
+  if (inStatsView) {
+  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+  ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+  ctx.strokeStyle = "white";
+  ctx.lineWidth = 2;
+  ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+
+  ctx.fillStyle = "white";
+  ctx.font = "18px monospace";
+
+  const lines = [
+    `Name: ${player.name}`,
+    `Level: ${player.level}`,
+    `XP: ${player.xp} / ${getXpForNextLevel(player.level)}`,
+    `HP: ${player.hp} / ${player.maxHp}`,
+    `Energy: ${player.energy} / ${player.maxEnergy}`,
+    `Attack: ${player.attack}`,
+    `Defense: ${player.defense}`,
+    `Crit Chance: ${(player.critChance * 100).toFixed(1)}%`,
+    `Regen: ${player.regen}`
+  ];
+
+  lines.forEach((line, i) => {
+    ctx.fillText(line, 60, 80 + i * 30);
+  });
+
+  ctx.fillStyle = "#aaa";
+  ctx.fillText("Press Esc to go back", 60, canvas.height - 50);
+}
+
+}
+
 }

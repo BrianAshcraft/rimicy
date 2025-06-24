@@ -2,7 +2,7 @@
 
 import { startOverworld, updateOverworld, drawOverworld } from './overworld.js';
 import { updateBattle, drawBattle, injectSetGameState } from './battle.js';
-
+import { loadPlayerData } from './playerstate.js';
 
 let gameState = 'title'; // 'title' | 'overworld' | 'battle'
 export function setGameState(state) {
@@ -40,6 +40,7 @@ function setupTitleScreen() {
 
   function handleStart(e) {
     if (e.key === "Enter") {
+      loadPlayerData();
       document.removeEventListener("keydown", handleStart);
       title.remove();
       gameState = "overworld";

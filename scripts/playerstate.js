@@ -23,3 +23,16 @@ export const player = {
 export function getXpForNextLevel(level) {
   return 20 + (level - 1) * 15; // You can tune this curve later
 }
+
+
+export function savePlayerData() {
+  localStorage.setItem("save_player", JSON.stringify(player));
+}
+
+export function loadPlayerData() {
+  const data = localStorage.getItem("save_player");
+  if (data) {
+    const loaded = JSON.parse(data);
+    Object.assign(player, loaded);
+  }
+}
