@@ -3,6 +3,8 @@ export function injectSetGameState(fn) {
   setGameStateFunc = fn;
 }
 
+
+let inAttackMenu = false;
 let enemyImg = new Image();
 let currentEnemy = null;
 let battleText = '';
@@ -31,26 +33,37 @@ export function startBattleWithEnemy(enemy) {
 function handleBattleInput(e) {
   if (!waitingForInput) return;
 
-  if (e.key === '1') {
-    waitingForInput = false;
-    performPlayerAttack();
-  } else if (e.key === '2') {
-  window.removeEventListener('keydown', handleBattleInput);
-  setGameStateFunc('overworld');
+  if (!inAttackMenu) {
+    if (e.key === '1') {
+      inAttackMenu = true;
+    } else if (e.key === '2') {
+      window.removeEventListener('keydown', handleBattleInput);
+      setGameStateFunc('overworld');
+    }
+  } else {
+    const index = parseInt(e.key) - 1;
+    const move = player.moves[index];
+    if (move) {
+      inAttackMenu = false;
+      waitingForInput = false;
+      performPlayerAttack(move);
+    }
   }
 }
 
-function performPlayerAttack() {
-  const dmg = Math.max(0, player.attack - currentEnemy.defense);
+
+function performPlayerAttack(move) {
+  const dmg = Math.max(0, move.power - currentEnemy.defense);
   currentEnemy.hp -= dmg;
-  battleText = `You dealt ${dmg} damage!`;
+  battleText = `You used ${move.name}! It dealt ${dmg} damage!`;
 
   if (currentEnemy.hp <= 0) {
     player.xp += currentEnemy.xpReward;
     battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
     setTimeout(() => {
       window.removeEventListener('keydown', handleBattleInput);
-      setGameStateFunc('overworld')    }, 1000);
+      setGameStateFunc('overworld');
+    }, 1000);
     return;
   }
 
@@ -58,6 +71,7 @@ function performPlayerAttack() {
     performEnemyAttack();
   }, 500);
 }
+
 
 function performEnemyAttack() {
   const dmg = Math.max(0, currentEnemy.attack - player.defense);
@@ -131,7 +145,10 @@ ctx.stroke();
 ctx.fillStyle = 'black';
 ctx.font = '20px monospace';
 ctx.fillText(battleText, boxMargin + 20, boxY + 40);
-ctx.fillText('1. Attack   2. Run', boxMargin + 20, boxY + 90);
-
-}
-
+if (!inAttackMenu) {
+  ctx.fillText('1. Attack   2. Run', 40, boxY + 100);
+} else {
+  player.moves.forEach((move, index) => {
+    ctx.fillText(`${index + 1}. ${move.name}`, 40, boxY + 80 + index * 30);
+  });
+}}
