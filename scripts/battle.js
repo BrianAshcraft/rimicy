@@ -1,6 +1,9 @@
 import { player } from './playerstate.js';
 import { getXpForNextLevel } from './playerstate.js';
 
+let waitingForKey = false;
+let pendingCallback = null;
+
 export function injectSetGameState(fn) {
   setGameStateFunc = fn;
 }
@@ -31,6 +34,16 @@ export function startBattleWithEnemy(enemy) {
   setGameStateFunc('battle');
 }
 
+function waitForKey(callback) {
+  waitingForKey = true;
+  pendingCallback = () => {
+    waitingForKey = false;
+    waitingForInput = true; // ✅ always restore input flow
+    if (callback) callback();
+  };
+}
+
+
 
 function checkLevelUp() {
   const xpNeeded = getXpForNextLevel(player.level);
@@ -49,6 +62,15 @@ function checkLevelUp() {
 
 
 function handleBattleInput(e) {
+  if (waitingForKey) {
+    waitingForKey = false;
+    if (pendingCallback) {
+      pendingCallback();
+      pendingCallback = null;
+    }
+    return;
+  }
+
   if (!waitingForInput) return;
 
   if (!inAttackMenu) {
@@ -79,29 +101,36 @@ function performPlayerAttack(move) {
 
   player.energy -= move.cost;
 
-  const dmg = Math.max(0, move.power - currentEnemy.defense);
+  // Crit logic
+  const isCrit = Math.random() < (player.critChance + (move.critBonus || 0));
+  const baseDamage = player.attack + move.power - currentEnemy.defense;
+  const dmg = Math.max(0, isCrit ? Math.floor(baseDamage * player.critMultiplier) : baseDamage);
+
   currentEnemy.hp -= dmg;
 
-  battleText = `You used ${move.name}! It dealt ${dmg} damage!`;
+  battleText = `You used ${move.name}! ${isCrit ? 'Critical hit! ' : ''}It dealt ${dmg} damage!`;
 
+  // Enemy defeated
   if (currentEnemy.hp <= 0) {
     player.xp += currentEnemy.xpReward;
-
-    battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
     checkLevelUp();
-    setTimeout(() => {
+    battleText = `${currentEnemy.name} defeated! +${currentEnemy.xpReward} XP`;
+
+    waitForKey(() => {
       window.removeEventListener('keydown', handleBattleInput);
       setGameStateFunc('overworld');
-    }, 1000);
+    });
 
-    return; // ✅ important — stops enemy from attacking after death
+    return;
   }
 
-  // Enemy still alive — proceed with their attack
-  setTimeout(() => {
+  // Enemy survives
+  waitForKey(() => {
     performEnemyAttack();
-  }, 500);
+  });
 }
+
+
 
 
 function performEnemyAttack() {
@@ -111,16 +140,18 @@ function performEnemyAttack() {
 
   if (player.hp <= 0) {
     battleText = 'You lost...';
-    setTimeout(() => {
+    waitForKey(() => {
       window.removeEventListener('keydown', handleBattleInput);
       setGameStateFunc('title');
-    }, 1000);
+    });
   } else {
-    // ✅ Refill energy here — at start of player's next turn
     player.energy = Math.min(player.maxEnergy, player.energy + player.regen);
-    waitingForInput = true;
+    waitForKey(() => {
+      waitingForInput = true;
+    });
   }
 }
+
 
 
 export function updateBattle() {

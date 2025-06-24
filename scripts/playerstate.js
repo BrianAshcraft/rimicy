@@ -11,10 +11,13 @@ export const player = {
   level: 1,
   xp: 0,
   moves: [
-    { name: "Slash", power: 12, cost: 3 },
-    { name: "Fireball", power: 25, cost: 15 },
-    { name: "murder", power: 1000, cost: 50}, // we'll skip logic for now
-  ]
+    { name: "Slash", power: 12, cost: 3, critBonus: 0.45 },
+    { name: "Fireball", power: 25, cost: 15, critBonus: 0.10 },
+    { name: "murder", power: 1000, cost: 50, critBonus: 0.05}, // we'll skip logic for now
+  ],
+  critChance: 0.15, // 15% chance
+  critMultiplier: 1.5,
+
 };
 
 export function getXpForNextLevel(level) {
