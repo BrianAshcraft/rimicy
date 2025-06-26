@@ -134,9 +134,28 @@ function performPlayerAttack(move) {
 
 
 function performEnemyAttack() {
-  const dmg = Math.max(0, currentEnemy.attack - player.defense);
+  // Regen energy
+  currentEnemy.energy = Math.min(currentEnemy.maxEnergy, currentEnemy.energy + currentEnemy.regen);
+
+  // Pick a move the enemy can afford
+  const availableMoves = currentEnemy.moves.filter(m => m.cost <= currentEnemy.energy);
+  
+  if (availableMoves.length === 0) {
+    battleText = `${currentEnemy.name} is out of energy!`;
+    waitForKey(() => {
+      waitingForInput = true;
+    });
+    return;
+  }
+
+  // Pick a random usable move
+  const move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+  currentEnemy.energy -= move.cost;
+
+  const dmg = Math.max(0, move.power - player.defense);
   player.hp -= dmg;
-  battleText = `${currentEnemy.name} hits for ${dmg} damage!`;
+
+  battleText = `${currentEnemy.name} used ${move.name} and dealt ${dmg} damage!`;
 
   if (player.hp <= 0) {
     battleText = 'You lost...';
@@ -145,12 +164,12 @@ function performEnemyAttack() {
       setGameStateFunc('title');
     });
   } else {
-    player.energy = Math.min(player.maxEnergy, player.energy + player.regen);
     waitForKey(() => {
       waitingForInput = true;
     });
   }
 }
+
 
 
 

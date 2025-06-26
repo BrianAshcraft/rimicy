@@ -6,6 +6,14 @@ export const enemyData = {
     defense: 2,
     image: "slime.png",
     xpReward: 15,
+    maxEnergy: 10,
+    energy: 10,
+    regen: 3,
+    moves: [
+      { name: "Punch", power: 5, cost: 2 },
+      { name: "Kick", power: 8, cost: 5 },
+      { name: "Headbutt", power: 12, cost: 8 }
+    ]
   },
   goblin: {
     name: "Wild Goblin",
@@ -14,6 +22,13 @@ export const enemyData = {
     defense: 1,
     image: "goblin.jpg",
     xpReward: 19,
+    maxEnergy: 10,
+    energy: 10,
+    regen: 3,
+    moves: [
+      { name: "Punch", power: 5, cost: 2 },
+      { name: "Kick", power: 8, cost: 5 },
+      { name: "Headbutt", power: 12, cost: 8 }]
   },
   TheAlmighty: {
     name: "The Allmighty",
@@ -22,21 +37,29 @@ export const enemyData = {
     defense: 0.5,
     image: "almighty.png",
     xpReward: 1000,
+    maxEnergy: 10,
+    energy: 10,
+    regen: 3,
+    moves: [
+      { name: "Punch", power: 5, cost: 2 },
+      { name: "Kick", power: 8, cost: 5 },
+      { name: "Headbutt", power: 12, cost: 8 }
+    ]
   },
 };
 
-export function createEnemy(type) {
-  const base = enemyData[type];
-  if (!base) throw new Error(`Unknown enemy type: ${type}`);
-
+export function createEnemy(name, hp, atk, def, xp, image, moves, energy = 20, regen = 5) {
   return {
-    name: base.name,
-    maxHp: base.maxHp,
-    hp: base.maxHp,
-    attack: base.attack,
-    defense: base.defense,
-    image: base.image,
-    xpReward: base.xpReward,
-    type: type
+    name,
+    hp,
+    maxHp: hp,
+    attack: atk,
+    defense: def,
+    xpReward: xp,
+    image,
+    energy,
+    maxEnergy: energy,
+    regen,
+    moves
   };
 }
