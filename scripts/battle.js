@@ -26,13 +26,19 @@ export function startBattleWithEnemy(enemy) {
   enemyImg = new Image();
   enemyImg.src = `assets/${enemy.image}`;
 
-  currentEnemy = { ...enemy }; // fresh copy
+  currentEnemy = {
+    ...enemy,
+    hp: enemy.maxHp,
+    energy: enemy.maxEnergy
+  };
+
   battleText = `A wild ${currentEnemy.name} appears!`;
   waitingForInput = true;
 
   window.addEventListener('keydown', handleBattleInput);
   setGameStateFunc('battle');
 }
+
 
 function waitForKey(callback) {
   waitingForKey = true;
@@ -128,6 +134,8 @@ function performPlayerAttack(move) {
   waitForKey(() => {
     performEnemyAttack();
   });
+  console.log(`Enemy HP: ${currentEnemy.hp}/${currentEnemy.maxHp}`);
+
 }
 
 
@@ -136,7 +144,7 @@ function performPlayerAttack(move) {
 function performEnemyAttack() {
   // Regen energy
   currentEnemy.energy = Math.min(currentEnemy.maxEnergy, currentEnemy.energy + currentEnemy.regen);
-
+  console.log(`[Enemy Turn] ${currentEnemy.name} Energy: ${currentEnemy.energy} / ${currentEnemy.maxEnergy}`);
   // Pick a move the enemy can afford
   const availableMoves = currentEnemy.moves.filter(m => m.cost <= currentEnemy.energy);
   
@@ -164,10 +172,14 @@ function performEnemyAttack() {
       setGameStateFunc('title');
     });
   } else {
+    // ✅ Regenerate energy on player's next turn
+    player.energy = Math.min(player.maxEnergy, player.energy + player.regen);
     waitForKey(() => {
       waitingForInput = true;
     });
   }
+console.log(`Player HP: ${player.hp}/${player.maxHp}`);
+
 }
 
 

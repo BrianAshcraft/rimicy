@@ -52,7 +52,7 @@ player.moveProgress = 0;
   }
 
   player.image = new Image();
-  player.image.src = "assets/trainer.png";
+  player.image.src = "assets/trainer2.png";
 
   window.addEventListener("keydown", e => {
   if (inStatsView) {
@@ -137,7 +137,10 @@ export function updateOverworld() {
       if (tile === 2 && Math.random() < 0.15) {
         const types = Object.keys(enemyData);
         const chosen = types[Math.floor(Math.random() * types.length)];
-        const enemy = createEnemy(chosen);
+        const data = enemyData[chosen];
+        const enemy = { ...enemyData[chosen] }; // uses the original object directly
+
+
         startBattleWithEnemy(enemy); // handled in battle.js, sets gameState = "battle"
       }
     }
