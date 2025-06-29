@@ -15,6 +15,7 @@ let menuOpen = false;
 let selectedMenuIndex = 0;
 let inStatsView = false;
 let currentMap = "start-town2";
+let npcs = [];
 
 let overworldKeyHandler = null;
 
@@ -119,6 +120,18 @@ export function startOverworld() {
 export function updateOverworld() {
   if (!map) return;
 
+if (!player.moving && keys["e"]) {
+  for (const npc of npcs) {
+    const dx = Math.abs(player.x - npc.x);
+    const dy = Math.abs(player.y - npc.y);
+    if ((dx === 1 && dy === 0) || (dy === 1 && dx === 0)) {
+      npc.interaction();
+      break;
+    }
+  }
+}
+
+
   if (!player.moving) {
     let dx = 0;
     let dy = 0;
@@ -180,8 +193,31 @@ function loadMap(mapName, startX, startY) {
       player.moving = false;
       player.moveProgress = 0;
       keys = {};
+      npcs = loadNpcsForMap(mapName);
+
     });
 }
+
+function loadNpcsForMap(mapName) {
+  if (mapName === "center-interior") {
+    return [
+      {
+        name: "Nurse",
+        x: 6,
+        y: 9,
+        sprite: "nurse.png",
+        interaction: () => {
+          alert("You look like you could use some restoration. Let me help you.");
+          player.hp = player.maxHp;
+          player.energy = player.maxEnergy;
+        }
+      }
+    ];
+  }
+  return []; // no NPCs for other maps yet
+}
+
+
 
 export function drawOverworld(ctx) {
   if (!map) return;
@@ -211,6 +247,15 @@ export function drawOverworld(ctx) {
   const offsetY = player.moving ? -player.dy * (tileSize - player.moveProgress) : 0;
   const px = Math.floor(screenWidth / 2) * tileSize + offsetX;
   const py = Math.floor(screenHeight / 2) * tileSize + offsetY;
+
+for (const npc of npcs) {
+  const nx = npc.x - camX;
+  const ny = npc.y - camY;
+  const img = new Image();
+  img.src = `assets/${npc.sprite}`;
+  ctx.drawImage(img, nx * tileSize, ny * tileSize, tileSize, tileSize);
+}
+
 
   if (player.image?.complete) {
     ctx.drawImage(player.image, px, py, tileSize, tileSize);
