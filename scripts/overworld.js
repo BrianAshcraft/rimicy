@@ -126,6 +126,7 @@ if (!player.moving && keys["e"]) {
     const dy = Math.abs(player.y - npc.y);
     if ((dx === 1 && dy === 0) || (dy === 1 && dx === 0)) {
       npc.interaction();
+      keys["e"] = false; // <-- prevents repeat triggers
       break;
     }
   }
