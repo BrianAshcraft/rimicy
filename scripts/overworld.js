@@ -30,12 +30,12 @@ export function startOverworld() {
     3: { name: "water", color: "blue", passable: false, image: "water.png" },
     4: { name: "tree", color: "blue", passable: false, image: "tree.png" },
     5: { name: "shop", color: "blue", passable: false, image: "shop.png" },
-    6: { name: "center", color: "pink", passable: false, image: "center.png" },
+    6: { name: "center", color: "pink", passable: true, image: "center.png" },
     7: { name: "sign", color: "white", passable: false, image: "sign.png" },
     8: { name: "cave", color: "gray", passable: true, image: "cave.png" },
     9: { name: "vert-path", color: "gray", passable: true, image: "vert-path.png" },
     10: { name: "hor-path", color: "gray", passable: true, image: "hori-path.png" },
-    11: { name: "center-interior", color: "pink", passable: true, image: "center-i.png" },
+    11: { name: "exit-door", color: "pink", passable: true, image: "exit-door.png" },
     12: { name: "floor", color: "#222", passable: true, image: "indoor-floor.png" }
   };
 
@@ -157,9 +157,9 @@ export function updateOverworld() {
         const enemy = { ...enemyData[chosen] };
         startBattleWithEnemy(enemy);
       } else if (tile === 6 && currentMap === "start-town2") {
-        loadMap("center-interior", 9, 8);
+        loadMap("center-interior", 9, 10);
       } else if (tile === 11 && currentMap === "center-interior") {
-        loadMap("start-town2", 12, 9);
+        loadMap("start-town2", 12, 15);
       }
     }
   }
