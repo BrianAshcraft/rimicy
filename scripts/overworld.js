@@ -1,10 +1,8 @@
-import { enemyData, createEnemy } from './enemies.js';
+import { enemyData } from './enemies.js';
 import { startBattleWithEnemy } from './battle.js';
-import { updateBattle, drawBattle, injectSetGameState } from './battle.js';
 import { setGameState } from './main.js';
 import { getXpForNextLevel } from './playerstate.js';
-import { player } from './playerstate.js';
-import { savePlayerData, loadPlayerData } from './playerstate.js';
+import { player, savePlayerData, loadPlayerData } from './playerstate.js';
 
 let map = null;
 let tileTypes = {};
@@ -16,6 +14,9 @@ let ctx = null;
 let menuOpen = false;
 let selectedMenuIndex = 0;
 let inStatsView = false;
+let currentMap = "start-town2";
+
+let overworldKeyHandler = null;
 
 const tileSize = 64;
 const screenWidth = 15;
@@ -27,17 +28,28 @@ export function startOverworld() {
     1: { name: "floor", color: "#444", passable: true, image: "safegrass.png" },
     2: { name: "grass", color: "green", passable: true, image: "grass.png" },
     3: { name: "water", color: "blue", passable: false, image: "water.png" },
+    4: { name: "tree", color: "blue", passable: false, image: "tree.png" },
+    5: { name: "shop", color: "blue", passable: false, image: "shop.png" },
+    6: { name: "center", color: "pink", passable: false, image: "center.png" },
+    7: { name: "sign", color: "white", passable: false, image: "sign.png" },
+    8: { name: "cave", color: "gray", passable: true, image: "cave.png" },
+    9: { name: "vert-path", color: "gray", passable: true, image: "vert-path.png" },
+    10: { name: "hor-path", color: "gray", passable: true, image: "hori-path.png" },
+    11: { name: "center-interior", color: "pink", passable: true, image: "center-i.png" },
+    12: { name: "floor", color: "#222", passable: true, image: "indoor-floor.png" }
   };
 
-player.x = 10;
-player.y = 10;
-player.dx = 0;
-player.dy = 0;
-player.size = 28;
-player.speed = 4;
-player.moving = false;
-player.moveProgress = 0;
+  player.targetX = player.x;
+  player.targetY = player.y;
 
+  player.x = 10;
+  player.y = 10;
+  player.dx = 0;
+  player.dy = 0;
+  player.size = 28;
+  player.speed = 4;
+  player.moving = false;
+  player.moveProgress = 0;
 
   keys = {};
   tileImages = {};
@@ -54,46 +66,50 @@ player.moveProgress = 0;
   player.image = new Image();
   player.image.src = "assets/trainer2.png";
 
-  window.addEventListener("keydown", e => {
-  if (inStatsView) {
-    if (e.key === "Escape") {
-      inStatsView = false;
+  if (overworldKeyHandler) {
+    window.removeEventListener("keydown", overworldKeyHandler);
+  }
+
+  overworldKeyHandler = function(e) {
+    if (inStatsView) {
+      if (e.key === "Escape") {
+        inStatsView = false;
+      }
+      return;
     }
-    return;
-  }
 
-  if (menuOpen) {
-    if (e.key === "ArrowUp") {
-      selectedMenuIndex = (selectedMenuIndex - 1 + 4) % 4;
-    } else if (e.key === "ArrowDown") {
-      selectedMenuIndex = (selectedMenuIndex + 1) % 4;
-    } else if (e.key === "Enter") {
-      const selectedOption = ["Items", "Stats", "Save", "Options"][selectedMenuIndex];
-      if (selectedOption === "Stats") {
-        inStatsView = true;
-      }else if (selectedOption === "Save") {
-  savePlayerData();
-  alert("Game saved!");
-}
-      // Add other cases later
-    } else if (e.key === "Escape") {
-      menuOpen = false;
+    if (menuOpen) {
+      if (e.key === "ArrowUp") {
+        selectedMenuIndex = (selectedMenuIndex - 1 + 4) % 4;
+      } else if (e.key === "ArrowDown") {
+        selectedMenuIndex = (selectedMenuIndex + 1) % 4;
+      } else if (e.key === "Enter") {
+        const selectedOption = ["Items", "Stats", "Save", "Options"][selectedMenuIndex];
+        if (selectedOption === "Stats") {
+          inStatsView = true;
+        } else if (selectedOption === "Save") {
+          savePlayerData();
+          alert("Game saved!");
+        }
+      } else if (e.key === "Escape") {
+        menuOpen = false;
+      }
+      return;
     }
-    return;
-  }
 
-  if (e.key === "m") {
-    menuOpen = !menuOpen;
-    selectedMenuIndex = 0;
-    return;
-  }
+    if (e.key === "m") {
+      menuOpen = !menuOpen;
+      selectedMenuIndex = 0;
+      return;
+    }
 
-  keys[e.key] = true;
-});
+    keys[e.key] = true;
+  };
 
+  window.addEventListener("keydown", overworldKeyHandler);
   window.addEventListener("keyup", e => keys[e.key] = false);
 
-  fetch("data/start-town.json")
+  fetch("data/start-town2.json")
     .then(res => res.json())
     .then(data => {
       map = data.tiles;
@@ -134,21 +150,40 @@ export function updateOverworld() {
       player.moving = false;
 
       const tile = map[player.y][player.x];
+
       if (tile === 2 && Math.random() < 0.15) {
         const types = Object.keys(enemyData);
         const chosen = types[Math.floor(Math.random() * types.length)];
-        const data = enemyData[chosen];
-        const enemy = { ...enemyData[chosen] }; // uses the original object directly
-
-
-        startBattleWithEnemy(enemy); // handled in battle.js, sets gameState = "battle"
+        const enemy = { ...enemyData[chosen] };
+        startBattleWithEnemy(enemy);
+      } else if (tile === 6 && currentMap === "start-town2") {
+        loadMap("center-interior", 9, 8);
+      } else if (tile === 11 && currentMap === "center-interior") {
+        loadMap("start-town2", 12, 9);
       }
     }
   }
 }
 
+function loadMap(mapName, startX, startY) {
+  fetch(`data/${mapName}.json`)
+    .then(res => res.json())
+    .then(data => {
+      map = data.tiles;
+      currentMap = mapName;
+      player.x = startX;
+      player.y = startY;
+      player.targetX = startX;
+      player.targetY = startY;
+      player.dx = 0;
+      player.dy = 0;
+      player.moving = false;
+      player.moveProgress = 0;
+      keys = {};
+    });
+}
+
 export function drawOverworld(ctx) {
-  
   if (!map) return;
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -183,58 +218,58 @@ export function drawOverworld(ctx) {
     ctx.fillStyle = "#0ff";
     ctx.fillRect(px, py, player.size, player.size);
   }
+
   if (menuOpen) {
-  const menuX = canvas.width - 240;
-  const menuY = 40;
-  const menuWidth = 200;
-  const menuHeight = 220;
-  const menuOptions = ["Items", "Stats", "Save", "Options"];
+    const menuX = canvas.width - 240;
+    const menuY = 40;
+    const menuWidth = 200;
+    const menuHeight = 220;
+    const menuOptions = ["Items", "Stats", "Save", "Options"];
 
-  ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
-  ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.7)";
+    ctx.fillRect(menuX, menuY, menuWidth, menuHeight);
 
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(menuX, menuY, menuWidth, menuHeight);
 
-  ctx.fillStyle = "white";
-  ctx.font = "18px monospace";
-  menuOptions.forEach((option, i) => {
-    const y = menuY + 40 + i * 40;
-    ctx.fillStyle = i === selectedMenuIndex ? "#0ff" : "white";
-    ctx.fillText(option, menuX + 20, y);
-  });
-  if (inStatsView) {
-  ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
-  ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
+    ctx.fillStyle = "white";
+    ctx.font = "18px monospace";
+    menuOptions.forEach((option, i) => {
+      const y = menuY + 40 + i * 40;
+      ctx.fillStyle = i === selectedMenuIndex ? "#0ff" : "white";
+      ctx.fillText(option, menuX + 20, y);
+    });
 
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
+    if (inStatsView) {
+      ctx.fillStyle = "rgba(0, 0, 0, 0.85)";
+      ctx.fillRect(40, 40, canvas.width - 80, canvas.height - 80);
 
-  ctx.fillStyle = "white";
-  ctx.font = "18px monospace";
+      ctx.strokeStyle = "white";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(40, 40, canvas.width - 80, canvas.height - 80);
 
-  const lines = [
-    `Name: ${player.name}`,
-    `Level: ${player.level}`,
-    `XP: ${player.xp} / ${getXpForNextLevel(player.level)}`,
-    `HP: ${player.hp} / ${player.maxHp}`,
-    `Energy: ${player.energy} / ${player.maxEnergy}`,
-    `Attack: ${player.attack}`,
-    `Defense: ${player.defense}`,
-    `Crit Chance: ${(player.critChance * 100).toFixed(1)}%`,
-    `Regen: ${player.regen}`
-  ];
+      ctx.fillStyle = "white";
+      ctx.font = "18px monospace";
 
-  lines.forEach((line, i) => {
-    ctx.fillText(line, 60, 80 + i * 30);
-  });
+      const lines = [
+        `Name: ${player.name}`,
+        `Level: ${player.level}`,
+        `XP: ${player.xp} / ${getXpForNextLevel(player.level)}`,
+        `HP: ${player.hp} / ${player.maxHp}`,
+        `Energy: ${player.energy} / ${player.maxEnergy}`,
+        `Attack: ${player.attack}`,
+        `Defense: ${player.defense}`,
+        `Crit Chance: ${(player.critChance * 100).toFixed(1)}%`,
+        `Regen: ${player.regen}`
+      ];
 
-  ctx.fillStyle = "#aaa";
-  ctx.fillText("Press Esc to go back", 60, canvas.height - 50);
-}
+      lines.forEach((line, i) => {
+        ctx.fillText(line, 60, 80 + i * 30);
+      });
 
-}
-
+      ctx.fillStyle = "#aaa";
+      ctx.fillText("Press Esc to go back", 60, canvas.height - 50);
+    }
+  }
 }

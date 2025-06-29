@@ -1,19 +1,19 @@
 // playerState.js
 export const player = {
   name: "Trainer",
-  hp: 100,
-  maxHp: 100,
-  energy: 50,
+  hp: 50,
+  maxHp: 50,
+  energy: 30,
   maxEnergy: 50,
-  regen: 5, // amount regained per turn
-  attack: 1,
+  regen: 3, // amount regained per turn
+  attack: 1.5,
   defense: 1,
   level: 1,
   xp: 0,
   moves: [
-    { name: "Slash", power: 12, cost: 3, critBonus: 0.45 },
-    { name: "Fireball", power: 25, cost: 15, critBonus: 0.10 },
-    { name: "murder", power: 1000, cost: 50, critBonus: 0.05}, // we'll skip logic for now
+    { name: "punch", power: 1, cost: 2, critBonus: 0.10 },
+    { name: "tackle", power: 5, cost: 8, critBonus: 0.10 },
+    { name: "murder", power: 1000, cost: 50, critBonus: 0.05}, 
   ],
   critChance: 0.15, // 15% chance
   critMultiplier: 1.5,
