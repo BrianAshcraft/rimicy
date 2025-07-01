@@ -26,13 +26,19 @@ export function getXpForNextLevel(level) {
 
 
 export function savePlayerData() {
-  localStorage.setItem("save_player", JSON.stringify(player));
+  const data = {
+    ...player,
+    currentMap: player.currentMap // save current map
+  };
+  localStorage.setItem("playerData", JSON.stringify(data));
 }
 
+
 export function loadPlayerData() {
-  const data = localStorage.getItem("save_player");
+  const data = JSON.parse(localStorage.getItem("playerData"));
   if (data) {
-    const loaded = JSON.parse(data);
-    Object.assign(player, loaded);
+    Object.assign(player, data);
+    return data.currentMap || "start-town2"; // return map name
   }
+  return null;
 }

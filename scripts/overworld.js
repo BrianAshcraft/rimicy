@@ -110,74 +110,73 @@ export function startOverworld() {
   window.addEventListener("keydown", overworldKeyHandler);
   window.addEventListener("keyup", e => keys[e.key] = false);
 
-  fetch("data/start-town2.json")
-    .then(res => res.json())
-    .then(data => {
-      map = data.tiles;
-    });
+  const savedMap = loadPlayerData() || "start-town2";
+
+fetch(`data/${savedMap}.json`)
+  .then(res => res.json())
+  .then(data => {
+    map = data.tiles;
+    currentMap = savedMap;
+    player.targetX = player.x;
+    player.targetY = player.y;
+    npcs = loadNpcsForMap(savedMap);
+  });
+
 }
 
 export function updateOverworld() {
   if (!map) return;
 
-if (!player.moving && keys["e"]) {
+if (keys["e"]) {
   for (const npc of npcs) {
     const dx = Math.abs(player.x - npc.x);
     const dy = Math.abs(player.y - npc.y);
     if ((dx === 1 && dy === 0) || (dy === 1 && dx === 0)) {
       npc.interaction();
-      keys["e"] = false; // <-- prevents repeat triggers
+      keys["e"] = false;
       break;
     }
   }
 }
 
+// Movement input
+let dx = 0;
+let dy = 0;
+if (keys["ArrowUp"]) dy = -1;
+else if (keys["ArrowDown"]) dy = 1;
+else if (keys["ArrowLeft"]) dx = -1;
+else if (keys["ArrowRight"]) dx = 1;
 
-  if (!player.moving) {
-    let dx = 0;
-    let dy = 0;
-    if (keys["ArrowUp"]) dy = -1;
-    else if (keys["ArrowDown"]) dy = 1;
-    else if (keys["ArrowLeft"]) dx = -1;
-    else if (keys["ArrowRight"]) dx = 1;
+if (dx || dy) {
+  const tx = player.x + dx;
+  const ty = player.y + dy;
+  const tile = map?.[ty]?.[tx];
+  if (tile !== undefined && tileTypes[tile]?.passable) {
+    player.x = tx;
+    player.y = ty;
 
-    if (dx || dy) {
-      const tx = player.x + dx;
-      const ty = player.y + dy;
-      const tile = map?.[ty]?.[tx];
-      if (tile !== undefined && tileTypes[tile]?.passable) {
-        player.dx = dx;
-        player.dy = dy;
-        player.targetX = tx;
-        player.targetY = ty;
-        player.moving = true;
-        player.moveProgress = 0;
-      }
+    // Special tile triggers
+    if (tile === 2 && Math.random() < 0.15) {
+      const types = Object.keys(enemyData);
+      const chosen = types[Math.floor(Math.random() * types.length)];
+      const enemy = { ...enemyData[chosen] };
+      startBattleWithEnemy(enemy);
+    } else if (tile === 6 && currentMap === "start-town2") {
+      loadMap("center-interior", 9, 10);
+    } else if (tile === 11 && currentMap === "center-interior") {
+      loadMap("start-town2", 12, 15);
     }
-  }
 
-  if (player.moving) {
-    player.moveProgress += player.speed;
-    if (player.moveProgress >= tileSize) {
-      player.x = player.targetX;
-      player.y = player.targetY;
-      player.moving = false;
-
-      const tile = map[player.y][player.x];
-
-      if (tile === 2 && Math.random() < 0.15) {
-        const types = Object.keys(enemyData);
-        const chosen = types[Math.floor(Math.random() * types.length)];
-        const enemy = { ...enemyData[chosen] };
-        startBattleWithEnemy(enemy);
-      } else if (tile === 6 && currentMap === "start-town2") {
-        loadMap("center-interior", 9, 10);
-      } else if (tile === 11 && currentMap === "center-interior") {
-        loadMap("start-town2", 12, 15);
-      }
-    }
+    // Stop held movement
+    keys["ArrowUp"] = false;
+    keys["ArrowDown"] = false;
+    keys["ArrowLeft"] = false;
+    keys["ArrowRight"] = false;
   }
 }
+}
+
+
 
 function loadMap(mapName, startX, startY) {
   fetch(`data/${mapName}.json`)
